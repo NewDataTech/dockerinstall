@@ -1,34 +1,38 @@
-version: '3'
-services:
-  keycloak:
-    image: quay.io/keycloak/keycloak:latest
-    environment:
-      # Database connection
-      KC_DB: postgres
-      KC_DB_URL_HOST: postgres
-      KC_DB_URL_DATABASE: keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: password
-      # Keycloak specific settings
-      KC_HOSTNAME: keycloak.example.com  # Replace with your public domain
-      KC_PROXY: edge  # This tells Keycloak it's behind a reverse proxy
-      KC_HTTP_ENABLED: 'true'  # Enable HTTP because Nginx will handle HTTPS
-      KC_HTTPS_PORT: 8080      # You can keep Keycloak listening on HTTP internally
-    ports:
-      - "8080:8080"  # Expose HTTP port, Nginx will handle SSL on port 443
-    depends_on:
-      - postgres
-    restart: always
+version: '3.8'
 
+services:
   postgres:
-    image: postgres:latest
+    image: postgres:16.2
+    container_name: keycloak-postgres
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: keycloak
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    restart: always
+    networks:
+      - keycloak-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0.1
+    container_name: keycloak
+    environment:
+      DB_VENDOR: postgres
+      DB_ADDR: postgres
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - keycloak-network
 
 volumes:
   postgres_data:
+
+networks:
+  keycloak-network:
