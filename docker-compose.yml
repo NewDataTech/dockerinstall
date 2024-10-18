@@ -10,6 +10,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - keycloak-network
+    restart: unless-stopped
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0.1
@@ -26,6 +27,8 @@ services:
       - "8080:8080"
     depends_on:
       - postgres
+    command: start
+    restart: unless-stopped
     networks:
       - keycloak-network
 
